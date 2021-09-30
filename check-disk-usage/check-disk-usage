@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [ $((100 * `env stat -f -c %f ${TARGET_PATH}` / `env stat -f -c %b ${TARGET_PATH}`)) -lt ${DISK_USAGE_THRESHOLD} ]; then
+  ${ON_SUCCESS}
+else
+  ${ON_FAILURE}
+fi
