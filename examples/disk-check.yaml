@@ -12,42 +12,40 @@ spec:
       labels:
         app: disk-check-app
     spec:
-      # volumes:
-      #   - name: crontabs
-      #     configMap:
-      #       name: disk-check-crontabs
-            # items:
-            #   - key: "testcron"
-            #     path: "testcron"
-        # - name: var-spool-cron-crontabs
-        #   emptyDir:
+      volumes:
+        - name: disk-check-script
+          configMap:
+            name: disk-check-script
       containers:
         - name: app
           image: s1s5/cron:alpine
           env:
+            - name: TARGET_PATH
+              value: "/"
+            - name: THRESHOLD
+              value: "80"
             - name: CRONTABS
               value: |
-                * * * * * echo "hello: `date`" >> /var/lib/cron.log 2>&1
-          # env:
-          #   - name: CRONTABS_DIR
-          #     value: /opt/crontabs
+                * * * * * /bin/bash /opt/check-disk >> /var/lib/cron.log 2>&1
           livenessProbe:
             exec:
               command:
                 - check-liveness
             initialDelaySeconds: 120
             periodSeconds: 60
-          # volumeMounts:
-          #   - name: crontabs
-          #     mountPath: /opt/crontabs
-              # readOnly: true
-            # - name: var-spool-cron-crontabs
-            #   mountPath: /var/spool/cron/crontabs
+          volumeMounts:
+            - name: disk-check-script
+              mountPath: /opt/
+              readOnly: true
 ---
-# apiVersion: v1
-# kind: ConfigMap
-# metadata:
-#   name: disk-check-crontabs
-# data:
-#   root: |
-#     * * * * * echo "hello: `date`" >> /tmp/cron.log 2>&1
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: disk-check-script
+data:
+  check-disk: |
+    if [ $((100 * `env stat -f -c %f ${TARGET_PATH}` / `env stat -f -c %b ${TARGET_PATH}`)) -lt ${THRESHOLD} ]; then
+      echo ok > /tmp/out
+    else
+      echo ng > /tmp/out
+    fi
