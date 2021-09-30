@@ -9,5 +9,7 @@ RUN set -ex \
     && ln -s /var/log/cron.log /var/log/crond.log
 
 COPY start-cron /usr/sbin
+COPY heartbeat /usr/sbin
+COPY check-liveness /usr/sbin
 
 CMD ["start-cron"]

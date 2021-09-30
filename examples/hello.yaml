@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: disk-check
+spec:
+  selector:
+    matchLabels:
+      app: disk-check-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: disk-check-app
+    spec:
+      containers:
+        - name: app
+          image: s1s5/cron:alpine
+          env:
+            - name: CRONTABS
+              value: |
+                * * * * * echo "hello: `date`" >> /var/lib/cron.log 2>&1
+          livenessProbe:
+            exec:
+              command:
+                - check-liveness
+            initialDelaySeconds: 120
+            periodSeconds: 60

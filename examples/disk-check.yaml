@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: disk-check
+spec:
+  selector:
+    matchLabels:
+      app: disk-check-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: disk-check-app
+    spec:
+      # volumes:
+      #   - name: crontabs
+      #     configMap:
+      #       name: disk-check-crontabs
+            # items:
+            #   - key: "testcron"
+            #     path: "testcron"
+        # - name: var-spool-cron-crontabs
+        #   emptyDir:
+      containers:
+        - name: app
+          image: s1s5/cron:alpine
+          env:
+            - name: CRONTABS
+              value: |
+                * * * * * echo "hello: `date`" >> /var/lib/cron.log 2>&1
+          # env:
+          #   - name: CRONTABS_DIR
+          #     value: /opt/crontabs
+          livenessProbe:
+            exec:
+              command:
+                - check-liveness
+            initialDelaySeconds: 120
+            periodSeconds: 60
+          # volumeMounts:
+          #   - name: crontabs
+          #     mountPath: /opt/crontabs
+              # readOnly: true
+            # - name: var-spool-cron-crontabs
+            #   mountPath: /var/spool/cron/crontabs
+---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: disk-check-crontabs
+# data:
+#   root: |
+#     * * * * * echo "hello: `date`" >> /tmp/cron.log 2>&1

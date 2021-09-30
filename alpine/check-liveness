@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+t=`date "+%s"`
+
+for i in `seq 0 ${LIVENESS_TIMEOUT:-10}`; do
+    if [ -e /tmp/liveness ]; then
+        s=`cat /tmp/liveness`
+        if [ $((t - s)) -lt $((${LIVENESS_THRESHOLD:-1} * 60)) ]; then
+            exit 0
+        fi
+    fi
+    sleep 1
+done
+
+exit 1
